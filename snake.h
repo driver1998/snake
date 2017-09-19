@@ -5,6 +5,7 @@
 #define DIRECTION_DOWN  2
 #define DIRECTION_LEFT  3
 #define DIRECTION_RIGHT 4
+#define DIRECTION_EXIT  -1
 
 typedef Queue Snake;
 typedef char Item;

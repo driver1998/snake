@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <pthread.h>
-#include <time.h>
+#include <curses.h>
 
 #include <common.h>
 #include <queue.h>
@@ -11,14 +11,56 @@
 
 
 Direction _direction = DIRECTION_DOWN;
-//pthread_t _threadID;
+pthread_t thread;
 Snake* _snake;
+
+void* controlLoop (){
+	initscr();
+	noecho();
+	char c;
+	while (true) {
+		c=getch();
+		
+		switch(c) {
+			case 'w':
+			case 'W':
+				if (_direction != DIRECTION_DOWN) _direction = DIRECTION_UP;
+				break;
+			
+			case 'a':
+			case 'A':
+				if (_direction != DIRECTION_RIGHT) _direction = DIRECTION_LEFT;
+				break;
+				
+			case 's':
+			case 'S':
+				if (_direction != DIRECTION_UP) _direction = DIRECTION_DOWN;
+				break;
+				
+			case 'd':
+			case 'D':
+				if (_direction != DIRECTION_LEFT) _direction = DIRECTION_RIGHT;
+				break;
+				
+			case 'q':
+			case 'Q':
+				_direction = DIRECTION_EXIT;
+				goto end;
+		}
+	}
+	
+	end:
+	endwin();
+	return NULL;
+}
+
 
 int main() {
 	_snake = initSnake();
 	
 	printf("\n");
 	
+	pthread_create(&thread, NULL, controlLoop, NULL);
 	gameLoop();
 	return 0;
 }
@@ -54,7 +96,7 @@ void* gameLoop() {
 	while(true) {
 		usleep(1000*100);
 		
-		printf("\n");
+		fflush(stdout);
 
 		Point* snakeHead = _snake->rear->data;
 		Point* point = Queue_DeQueue(_snake);
@@ -80,6 +122,8 @@ void* gameLoop() {
 				point->x=(snakeHead->x+1)%80;
 				point->y=snakeHead->y;
 				break;
+			case DIRECTION_EXIT:
+				goto end;
 				
 		}
 		
@@ -88,6 +132,8 @@ void* gameLoop() {
 		
 		
 	}
+	
+	end:
 	return NULL;
 }
 

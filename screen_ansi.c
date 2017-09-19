@@ -14,6 +14,6 @@ void resetColor () {
 	printf("\033[m");
 }
 
-void clear() {
+void _clear() {
 	printf("\033[2J");
 }

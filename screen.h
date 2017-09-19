@@ -16,6 +16,6 @@ void setColor (int foreground, int background);
 
 void resetColor();
 
-void clear();
+void _clear();
 
 #endif
