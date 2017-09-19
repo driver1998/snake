@@ -28,7 +28,7 @@ Snake* initSnake() {
 	
 	Snake* snake = (Snake*)malloc(sizeof(Snake));
 	Queue_Init(snake);
-	
+
 	int i;
 	for (i=1; i<=10; i++) {
 		Point* point = (Point*)malloc(sizeof(Point));
@@ -52,26 +52,29 @@ void* gameLoop() {
 	int i;
 	struct timeval time;
 	while(true) {
-
 		usleep(1000*100);
 		
+		printf("\n");
+
 		Point* snakeHead = _snake->rear->data;
 		Point* point = Queue_DeQueue(_snake);
-		
+
 		drawPoint(point->x, point->y, ITEM_NULL);
 		
 		switch(_direction) {
 			case DIRECTION_UP:
 				point->x=snakeHead->x;
-				point->y=(snakeHead->y-1)%25;
+				point->y=snakeHead->y-1;
+				if (point->y <1) point->y=25;
 				break;
 			case DIRECTION_DOWN:
 				point->x=snakeHead->x;
 				point->y=(snakeHead->y+1)%25;
 				break;
 			case DIRECTION_LEFT:
-				point->x=(snakeHead->x-1)%80;
+				point->x=snakeHead->x-1;
 				point->y=snakeHead->y;
+				if (point->x <1) point->x=80;
 				break;
 			case DIRECTION_RIGHT:
 				point->x=(snakeHead->x+1)%80;
