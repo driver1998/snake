@@ -7,7 +7,7 @@
 #define DIRECTION_RIGHT 4
 #define DIRECTION_EXIT  -1
 
-typedef Queue Snake;
+typedef LinkedList Snake;
 typedef char Item;
 typedef int Direction;
 
@@ -22,5 +22,7 @@ Snake* initSnake();
 void drawPoint(int x, int y, Item item);
 
 void* gameLoop();
+
+void newFruit(Point* fruit);
 
 #endif

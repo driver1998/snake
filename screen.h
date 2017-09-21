@@ -1,6 +1,9 @@
 #ifndef SCREEN
 #define SCREEN
 
+#define SCREEN_WIDTH  80
+#define SCREEN_HEIGHT 25
+
 #define BLACK  0
 #define RED    1
 #define GREEN  2
