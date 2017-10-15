@@ -7,21 +7,26 @@
 #define DIRECTION_RIGHT 4
 #define DIRECTION_EXIT  -1
 
-typedef LinkedList Snake;
+#define RESULT_DEFAULT   0
+#define RESULT_GAME_OVER 1
+#define RESULT_EXIT      2
+
+typedef Queue Snake;
 typedef char Item;
 typedef int Direction;
+typedef int Result;
 
-const char ITEM_WALL  = '#';
-const char ITEM_SNAKE = '*';
-const char ITEM_FRUIT = '@';
-const char ITEM_NULL  = ' ';
+#define ITEM_WALL  '#'
+#define ITEM_SNAKE '*'
+#define ITEM_FRUIT '@'
+#define ITEM_NULL  ' '
 
 
 Snake* initSnake();
 
 void drawPoint(int x, int y, Item item);
 
-void* gameLoop();
+Result gameLoop();
 
 void newFruit(Point* fruit);
 

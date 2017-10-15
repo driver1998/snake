@@ -1,29 +1,24 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <pthread.h>
-#include <curses.h>
-#include <math.h>
 
 #include <common.h>
-#include <linkedList.h>
+#include <queue.h>
 #include <snake.h>
-#include <screen.h>
+#include <console.h>
+#include <thread.h>
 
-
-Direction _direction = DIRECTION_RIGHT;
-pthread_t _thread;
+volatile Direction _direction = DIRECTION_RIGHT;
 Snake* _snake = NULL;
 Point* _fruit = NULL;
+Thread _thread;
+int _score;
 
-void* controlLoop (){
-
-    noecho();
+void controlLoop (){
     char c;
     while (true) {
         
-        c=getch();
-        
+        c=getKeyInput();
+
         switch(c) {
             case 'w':
             case 'W':
@@ -48,170 +43,178 @@ void* controlLoop (){
             case 'q':
             case 'Q':
                 _direction = DIRECTION_EXIT;
-                goto end;
+                break;
         }
+
+        if (_direction == DIRECTION_EXIT) break;
     }
-    
-    end:
-    return NULL;
 }
 
 int main() {
     
-    initscr();
-    
-    pthread_create(&_thread, NULL, controlLoop, NULL);
-    
+    initScreen();
+    newThread(&_thread, controlLoop);
+
+    clearScreen();
     _snake = initSnake();
-    
     _fruit = (Point*)malloc(sizeof(Point));
     newFruit(_fruit);
+    _score=0;
     
     gameLoop();
     
-    endwin();
-    
-    
-    printf ("\n\033[2J\nGAME OVER\n");
+    resetScreen();
+    printf ("GAME OVER\nSCORE: %d\n", _score);
     return 0;
 }
 
-Snake* initSnake() {
-    clear();
-    
+Snake* initSnake() {    
     Snake* snake = (Snake*)malloc(sizeof(Snake));
-    LinkedList_Init(snake);
+    Queue_Init(snake);
 
-    int i;
-    for (i=1; i<=7; i++) {
+    for (int i=1; i<=7; i++) {
         Point* point = (Point*)malloc(sizeof(Point));
-        point->x = 1;
+        point->x = i;
         point->y = 1;
         point->item = ITEM_SNAKE;
         drawPoint(point->x, point->y, point->item);
-        LinkedList_InsertFirst(snake, point, 0);
+        
+        Queue_EnQueue(snake, point);
     }
     
     return snake;
 }
 
 void drawPoint(int x, int y, Item item) {
-    gotoxy(x, y);
-    
-    //if (item == ITEM_SNAKE) setColor(YELLOW, YELLOW);
-    printf("%c",item);
     resetColor();
+    gotoxy(x*2-1, y);
+
+    int background = BLACK;
+    switch(item) {
+        case ITEM_FRUIT:
+            background = RED;
+            break;
+        case ITEM_SNAKE:
+            background = YELLOW;
+            break;
+    }
+
+    setColor(WHITE, background);
+    printf("  ");
+    resetColor();
+}
+
+bool isHit(int objectX, int objectY, Snake* snake) {
+    if (snake == NULL) return true;
+    
+    bool hit = false;
+    
+    QNode* current = _snake->front;
+    while(current != NULL) {
+        Point* p = current->data;
+        if (p->x == objectX && p->y == objectY) {
+            hit = true;
+            break;
+        }
+        current = current->next;
+    }
+    
+    return hit;
 }
 
 void newFruit(Point* fruit) {
     if (fruit == NULL) return;
     
-    bool isApproved = false;
-    int x,y;
+    srand(time(NULL));
     
+    int fruitX, fruitY;
+    bool isApproved = false;
+   
     while (!isApproved) {
         
-        x=(rand()%(SCREEN_WIDTH))+1;
-        y=(rand()%(SCREEN_HEIGHT))+1;
-        if (x<1 || x>SCREEN_WIDTH || y<1 || y>SCREEN_HEIGHT) goto end;
+        fruitX=(rand()%(SCREEN_WIDTH-1))+1;
+        fruitY=(rand()%(SCREEN_HEIGHT-1))+1;
         
-        Node* current = _snake->head;
-        while(current != NULL) {
-            Point* p = current->data;
-            if (p->x == x && p->y == y) {
-                goto end;
-            }
-            current = current->next;
-        }
-        
-        isApproved = true;
-
-        end:
-        continue;
+        if (isHit(fruitX, fruitY, _snake))
+            continue;
+        else
+            isApproved = true;
     }
     
-    fruit->x = x;
-    fruit->y = y;
+    fruit->x = fruitX;
+    fruit->y = fruitY;
     fruit->item = ITEM_FRUIT;
-    drawPoint(x, y, ITEM_FRUIT);
+    drawPoint(fruitX, fruitY, ITEM_FRUIT);
 }
 
-void* gameLoop() {
+Result gameLoop() {
 
-    int i;
-    struct timeval time;
+    Result result = RESULT_DEFAULT;
+    
     while(true) {
-        usleep(1000*100);
+
+        msleep(100);
         fflush(stdout);
 
-        Point* snakeHead = LinkedList_GetFirst(*_snake, 0);
-
-
-        
-        int x;
-        int y;
+        Point* snakeHead = Queue_GetRear(_snake);
+     
+        int newX = snakeHead->x;
+        int newY = snakeHead->y;
         
         switch(_direction) {
             case DIRECTION_UP:
-                x=snakeHead->x;
-                y=snakeHead->y-1;
+                newY--;
                 break;
             case DIRECTION_DOWN:
-                x=snakeHead->x;
-                y=snakeHead->y+1;
+                newY++;
                 break;
             case DIRECTION_LEFT:
-                x=snakeHead->x-1;
-                y=snakeHead->y;
+                newX--;
                 break;
             case DIRECTION_RIGHT:
-                x=snakeHead->x+1;
-                y=snakeHead->y;
+                newX++;
                 break;
             case DIRECTION_EXIT:
+                result=RESULT_EXIT;
                 goto end;
         }
         
-        if (x>SCREEN_WIDTH ) x=1;
-        if (x<1) x=SCREEN_WIDTH;
-        if (y>SCREEN_HEIGHT) y=1;
-        if (y<1) y=SCREEN_HEIGHT;
+        if (newX>SCREEN_WIDTH ) newX=1;
+        if (newX<1) newX=SCREEN_WIDTH;
         
+        if (newY>SCREEN_HEIGHT) newY=1;
+        if (newY<1) newY=SCREEN_HEIGHT;
+        
+        //新的蛇头位置和原来的蛇身撞一起了 GAME OVER
+        if (isHit(newX, newY, _snake)) {
+            result=RESULT_GAME_OVER;
+            _direction = DIRECTION_EXIT;
+            goto end;
+        }
 
         
-        Node* current = _snake->head;
-        while(current != NULL) {
-            Point* p = current->data;
-            if (p->x == x && p->y == y) {
-                goto end;
-            }
-            current = current->next;
-        }
-        
-        
-        Point* point;
-        
-        if (_fruit != NULL && _fruit->x == x && _fruit->y == y) {
-            point = (Point*)malloc(sizeof(Point));
+        Point* newSnakeHead;
+        //判断是否吃到
+        if (_fruit != NULL && _fruit->x==newX && _fruit->y==newY) {
+            //吃到了 创建一个新的蛇头
+            newSnakeHead = (Point*)malloc(sizeof(Point));
             newFruit(_fruit);
+            _score++;
         } else {
-            point = LinkedList_GetLast(*_snake, 0);
-            LinkedList_DeleteLast(_snake, 0);
-            drawPoint(point->x, point->y, ITEM_NULL);
+            //没吃到 即是正常移动 
+            //将蛇尾出队，设置为蛇头的坐标，再入队
+            newSnakeHead = Queue_DeQueue(_snake);
+            drawPoint(newSnakeHead->x, newSnakeHead->y, ITEM_NULL);
         }
         
-        point->x = x;
-        point->y = y;
-        point->item = ITEM_SNAKE;
+        newSnakeHead->x = newX;
+        newSnakeHead->y = newY;
+        newSnakeHead->item = ITEM_SNAKE;
         
-        drawPoint(point->x, point->y, point->item);
-        LinkedList_InsertFirst(_snake, point, 0);
+        drawPoint(newX, newY, ITEM_SNAKE);
+        Queue_EnQueue(_snake, newSnakeHead);
     }
-    
+
     end:
-    clear();
-    echo();
-    resetColor();
-    
-    return NULL;
+    return result;
 }
