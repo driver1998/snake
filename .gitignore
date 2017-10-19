@@ -1,5 +1,9 @@
 .vscode
+.vs
 *.o
 *.obj
+Debug
+Release
+x64
 snake
 snake.exe

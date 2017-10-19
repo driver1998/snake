@@ -1,17 +1,16 @@
 DIR=./
-CC=cl.exe
 
 snake.exe: main.obj console.obj queue.obj
-	$(CC) -Fe:snake.exe main.obj console.obj queue.obj -I .
+	cl.exe -Fe:snake.exe main.obj console.obj queue.obj -I .
 	
-main.obj: common.h snake.h queue.h console.h main.c
-	$(CC) -Fo:main.obj -c main.c -I .
+main.obj: common.h queue.h console.h main.c
+	cl.exe -Fo:main.obj -c main.c -I .
 	
 console.obj: console.h console.c
-	$(CC) -Fo:console.obj -c console.c -I .
+	cl.exe -Fo:console.obj -c console.c -I .
 
 queue.obj: common.h queue.h queue.c
-	$(CC) -Fo:queue.obj -c queue.c -I .
+	cl.exe -Fo:queue.obj -c queue.c -I .
 
 clean:
 	del *.obj snake.exe

@@ -28,6 +28,7 @@ void* func_pthread(void* func) {
     return NULL;
 }
 
+//创建线程
 void newThread(Thread *t, ThreadFunc f) {
     #ifdef _WIN32
         *t = _beginthread(func_msvcrt, 0, (void*)f);
@@ -36,6 +37,7 @@ void newThread(Thread *t, ThreadFunc f) {
     #endif
 }
 
+//毫秒级别的延时
 void msleep(unsigned ms) {
     #ifdef _WIN32
         Sleep((unsigned long)ms);
