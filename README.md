@@ -7,7 +7,7 @@ Simple snake game written completely in C.
 - More features are coming!
 
 ## Build
-Makefiles for Linux+GCC and Windows+MSVC are provided.
+Makefiles for Linux+GCC and Windows+MSVC are provided, as well as a Visual Studio project file.
 
 Tested environments:
 - Windows 10 x64 + Visual Studio 2017
@@ -17,6 +17,8 @@ Tested environments:
 ```
 D:\Snake> nmake /f makefile.win32
 D:\Snake> snake.exe
+
+...or just use Visual Studio.
 ```
 
 ### Linux
